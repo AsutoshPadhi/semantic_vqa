@@ -1,0 +1,4 @@
+data/
+models/
+en_vectors_web_lg-2.1.0.tar.gz
+__pycache__/
