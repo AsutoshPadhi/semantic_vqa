@@ -175,9 +175,11 @@ class Decoder(nn.Module):
 
         packed = pack_padded_sequence(captions, lengths, batch_first=True)
 
-        hiddens, _ = self.lstm(packed)
+        hiddens, _ = self.lstm(captions)
         # TODO: Check if this should be hiddens or hiddens[0]
-        outputs = self.fc_out(hiddens[0])
+        outputs = self.fc_out(hiddens)
+
+        outputs = self.softmax(outputs)
 
         return outputs
 

@@ -31,6 +31,7 @@ class DataSet(DatasetLoader):
 
         '''Tokenize answers'''
         self.ans_token_to_ix, self.ans_emb = self.tokenize_ans(self.ans_list)
+        self.ans_ix_to_token = {v: k for k, v in self.ans_token_to_ix.items()}
         self.ans_token_size = self.ans_token_to_ix.__len__()
         print(' ========== Answer Gen token vocab size:', self.ans_token_size)
 
