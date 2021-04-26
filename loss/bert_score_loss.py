@@ -40,6 +40,6 @@ class BertLossFunc(nn.Module):
 
         P, R, F1 = score(self.cands, self.refs, lang="en", verbose=False)
         P = Variable(P, requires_grad=True)
-        loss = torch.mean(P)
+        loss = 1 - torch.mean(P)
         
         return loss

@@ -80,6 +80,12 @@ for epoch in range(start_epoch, __C.MAX_EPOCH):
         bbox_feat_iter = bbox_feat_iter[sort_ix]
         ques_ix_iter = ques_ix_iter[sort_ix]
         ans_ix_iter = ans_ix_iter[sort_ix]
+
+        frcn_feat_iter = frcn_feat_iter.cuda()
+        grid_feat_iter = grid_feat_iter.cuda()
+        bbox_feat_iter = bbox_feat_iter.cuda()
+        ques_ix_iter = ques_ix_iter.cuda()
+        ans_ix_iter = ans_ix_iter.cuda()
         
         y = pack_padded_sequence(ans_ix_iter, lengths, batch_first=True)[0]
         
