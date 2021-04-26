@@ -11,6 +11,7 @@ from vqa_loader import DataSet
 from config.model_cnfgs import Cfgs
 from net import Net
 from mcan.utils.optim import get_optim, adjust_lr
+from loss.bert_score_loss import BertLossFunc
 
 now = datetime.now()
 
@@ -20,7 +21,7 @@ __C.VERSION = str(int(datetime.timestamp(now)))
 
 dataset = DataSet()
 dataloader = DataLoader(dataset, batch_size=4, shuffle=True)
-Path('models/ce').mkdir(parents=True, exist_ok=True)
+Path('models/bs').mkdir(parents=True, exist_ok=True)
 
 data_size = dataset.data_size
 ques_emb = dataset.ques_emb
@@ -35,6 +36,7 @@ num_layers = 1
 net = Net(__C, ques_emb, ques_token_size, answer_size, 
                     ans_emb, embed_size, hidden_size, vocab_size, num_layers)
 net.train()
+net.cuda()
 
 '''Optimizers'''
 optim = get_optim(__C, net, data_size)
@@ -78,15 +80,21 @@ for epoch in range(start_epoch, __C.MAX_EPOCH):
         bbox_feat_iter = bbox_feat_iter[sort_ix]
         ques_ix_iter = ques_ix_iter[sort_ix]
         ans_ix_iter = ans_ix_iter[sort_ix]
+
+        frcn_feat_iter = frcn_feat_iter.cuda()
+        grid_feat_iter = grid_feat_iter.cuda()
+        bbox_feat_iter = bbox_feat_iter.cuda()
+        ques_ix_iter = ques_ix_iter.cuda()
+        ans_ix_iter = ans_ix_iter.cuda()
         
         y = pack_padded_sequence(ans_ix_iter, lengths, batch_first=True)[0]
         
         '''Send data to network'''
         y1 = net(frcn_feat_iter, grid_feat_iter, bbox_feat_iter, ques_ix_iter, ans_ix_iter)
         
-        '''Cross Entropy loss function'''
-        criterion = nn.CrossEntropyLoss()
-        loss = criterion(y1, y)
+        '''Bert Score loss function'''
+        criterion = BertLossFunc()
+        loss = criterion(y1, ans_ix_iter)
         loss.backward()
         loss_sum += loss.cpu().data.numpy()
 
@@ -97,7 +105,7 @@ for epoch in range(start_epoch, __C.MAX_EPOCH):
             epoch+1,
             step+1,
             int(data_size/__C.BATCH_SIZE),
-            'CE',
+            'BS',
             str(loss.item()))
         )
 
@@ -113,7 +121,7 @@ for epoch in range(start_epoch, __C.MAX_EPOCH):
     }
     torch.save(
         state,
-        'models/ce' +
+        'models/bs' +
         '/epoch' + str(epoch_final) +
         '.pkl'
     )
